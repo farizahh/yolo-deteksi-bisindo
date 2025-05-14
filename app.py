@@ -3,59 +3,64 @@ from ultralytics import YOLO
 import streamlit as st
 from PIL import Image
 import numpy as np
-import gtts
+from gtts import gTTS
 import tempfile
 import os
 
 # Load YOLOv8 model
-model = YOLO("bisindo_yolov8.pt")  # Ganti dengan path model yang sesuai
+model = YOLO("bisindo_yolov8.pt")  # Pastikan path benar
 
-# Set title
-st.title("Penerjemah Bahasa Isyarat BISINDO")
+# Streamlit title
+st.title("📷 Penerjemah Bahasa Isyarat BISINDO")
 
-# Kamera Input (langsung menangkap gambar)
-camera = st.camera_input("Arahkan kamera ke gerakan tangan")
-
-# State untuk label terakhir
+# Inisialisasi session_state
 if "last_label" not in st.session_state:
     st.session_state.last_label = ""
 
-if camera:
-    # Baca frame dari kamera (hasilnya format PIL)
-    image = Image.open(camera)
-    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+# Ambil input kamera
+camera = st.camera_input("📸 Arahkan kamera ke huruf BISINDO")
 
-    # Deteksi objek menggunakan YOLOv8
+if camera:
+    # Konversi input kamera ke array BGR (OpenCV)
+    img_pil = Image.open(camera)
+    frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+    # Prediksi dengan YOLOv8
     results = model.predict(frame)
 
-    # Menyaring hasil deteksi dan menggambar bounding box
     for r in results:
         boxes = r.boxes
-        names = r.names
+        names = r.names  # dict class_id -> label
 
         if boxes is not None:
             for box in boxes:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
+                conf = float(box.conf[0])  # confidence
 
-                # Koordinat bounding box
-                x1, y1, x2, y2 = box.xyxy[0]  # Koordinat bounding box
-                frame = cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+                # Tampilkan hanya jika confidence cukup tinggi
+                if conf > 0.5:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    frame = cv2.putText(
+                        frame,
+                        f"{label} ({conf:.2f})",
+                        (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (255, 255, 255),
+                        2,
+                    )
 
-                # Tampilkan label pada gambar
-                frame = cv2.putText(frame, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                    st.image(frame, channels="BGR", caption="📍 Deteksi huruf BISINDO")
 
-                # Tampilkan hasil terjemahan dalam streamlit
-                st.markdown(f"### Terjemahan: {label}")
+                    # Jika label baru, putar audio
+                    if label != st.session_state.last_label:
+                        tts = gTTS(text=label, lang='id')
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+                            tts.save(f.name)
+                            st.audio(f.name, format="audio/mp3")
+                        st.session_state.last_label = label
 
-                # Jika label berubah, buat audio baru dan putar
-                if label != st.session_state.last_label:
-                    tts = gtts.gTTS(label)
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as f:
-                        tts.save(f.name)
-                        st.audio(f.name, format="audio/mp3")
-                    st.session_state.last_label = label
-
-    # Tampilkan frame dengan bounding box yang sudah digambar
-    st.image(frame, channels="BGR")
-
+                    st.success(f"✅ Terjemahan: **{label}**")
+                    break  # Ambil satu huruf saja agar tidak tumpang tindih
