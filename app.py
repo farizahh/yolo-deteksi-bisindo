@@ -25,8 +25,8 @@ if camera:
     image = Image.open(camera)
     frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-    # Deteksi objek menggunakan YOLOv8
-    results = model.predict(frame)
+    # Deteksi objek menggunakan YOLOv8 dengan confidence threshold
+    results = model.predict(frame, conf=0.5)  # Hanya deteksi dengan confidence lebih dari 0.5
 
     for r in results:
         boxes = r.boxes
@@ -58,4 +58,3 @@ if camera:
 
     # Tampilkan frame dengan bounding box yang sudah digambar
     st.image(frame, channels="BGR")
-
