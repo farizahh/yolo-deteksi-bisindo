@@ -13,12 +13,12 @@ model = YOLO("bisindo_yolov8.pt")  # Ganti dengan path model yang sesuai
 # Set title
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
+# Kamera Input (langsung menangkap gambar)
+camera = st.camera_input("Arahkan kamera ke gerakan tangan")
+
 # State untuk label terakhir
 if "last_label" not in st.session_state:
     st.session_state.last_label = ""
-
-# Membaca frame dari kamera secara real-time
-camera = st.camera_input("Arahkan kamera ke gerakan tangan")
 
 if camera:
     # Baca frame dari kamera (hasilnya format PIL)
@@ -57,4 +57,5 @@ if camera:
                     st.session_state.last_label = label
 
     # Tampilkan frame dengan bounding box yang sudah digambar
-    st.image(frame, channels="BGR", use_column_width=True)
+    st.image(frame, channels="BGR")
+
