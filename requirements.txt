@@ -1,6 +1,1 @@
 streamlit
-ultralytics
-opencv-python
-numpy
-gTTS
-Pillow
