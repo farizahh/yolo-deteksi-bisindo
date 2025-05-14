@@ -25,20 +25,20 @@ if camera:
     image = Image.open(camera)
     frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-    # Deteksi objek menggunakan YOLOv8 dengan confidence threshold
-    results = model.predict(frame, conf=0.5)  # Hanya deteksi dengan confidence lebih dari 0.5
+    # Deteksi objek menggunakan YOLOv8
+    results = model.predict(frame)
 
+    # Menyaring hasil deteksi dan menggambar bounding box
     for r in results:
         boxes = r.boxes
         names = r.names
 
-        # Jika ada bounding box, tampilkan
         if boxes is not None:
             for box in boxes:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
 
-                # Gambar bounding box pada gambar
+                # Koordinat bounding box
                 x1, y1, x2, y2 = box.xyxy[0]  # Koordinat bounding box
                 frame = cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
 
@@ -58,3 +58,4 @@ if camera:
 
     # Tampilkan frame dengan bounding box yang sudah digambar
     st.image(frame, channels="BGR")
+
