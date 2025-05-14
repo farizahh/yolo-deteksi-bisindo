@@ -1,50 +1,43 @@
 import cv2
-from ultralytics import YOLO
-import streamlit as st
-from PIL import Image
 import numpy as np
+import streamlit as st
+from ultralytics import YOLO
+from PIL import Image
 
-# Load model
-model = YOLO("bisindo_yolov8.pt")
+# Load model YOLOv8
+model = YOLO("bisindo_yolov8.pt")  # Pastikan model tersedia di direktori yang benar
 
-# Judul halaman
+# Title of the Streamlit app
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
-# Kamera input
+# Camera Input Streamlit
 camera = st.camera_input("Arahkan kamera ke gerakan tangan")
 
-# Simpan label terakhir
-if "last_label" not in st.session_state:
-    st.session_state.last_label = ""
-
-# Jika ada input kamera
-if camera:
+# Check if camera is available
+if camera is not None:
+    # Baca frame dari kamera (PIL image)
     image = Image.open(camera)
-    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-
-    # Deteksi pakai YOLO
+    frame = np.array(image)
+    
+    # Deteksi menggunakan model YOLOv8
     results = model.predict(frame)
-
-    for r in results:
-        boxes = r.boxes
-        names = r.names
-
+    
+    # Loop through results and draw bounding boxes
+    for result in results:
+        boxes = result.boxes
+        names = result.names
         if boxes is not None:
             for box in boxes:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
-
-                # Tampilkan hasil di layar
+                
+                # Gambar bounding box pada frame
+                frame = result.plot()
+                
+                # Tampilkan label
                 st.markdown(f"### Terjemahan: {label}")
-
-                # Jika label berubah, trigger suara
-                if label != st.session_state.last_label:
-                    # Sematkan JavaScript untuk bicara
-                    js_code = f"""
-                        <script>
-                        var msg = new SpeechSynthesisUtterance("{label}");
-                        window.speechSynthesis.speak(msg);
-                        </script>
-                    """
-                    st.components.v1.html(js_code)
-                    st.session_state.last_label = label
+    
+    # Convert frame to RGB and display it in Streamlit
+    st.image(frame, channels="BGR", caption="Detected Sign Language", use_column_width=True)
+else:
+    st.warning("Tidak ada input dari kamera. Pastikan kamera terhubung dengan benar.")
