@@ -4,11 +4,14 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 
-# Load model YOLOv8
+# Load YOLOv8 model
 model = YOLO("bisindo_yolov8.pt")  # Pastikan model tersedia di direktori yang benar
 
 # Title of the Streamlit app
 st.title("Penerjemah Bahasa Isyarat BISINDO")
+
+# Inisialisasi Streamlit untuk display gambar
+frame_placeholder = st.empty()
 
 # Camera Input Streamlit
 camera = st.camera_input("Arahkan kamera ke gerakan tangan")
@@ -38,6 +41,6 @@ if camera is not None:
                 st.markdown(f"### Terjemahan: {label}")
     
     # Convert frame to RGB and display it in Streamlit
-    st.image(frame, channels="BGR", caption="Detected Sign Language", use_column_width=True)
+    frame_placeholder.image(frame, channels="BGR", caption="Detected Sign Language", use_column_width=True)
 else:
     st.warning("Tidak ada input dari kamera. Pastikan kamera terhubung dengan benar.")
