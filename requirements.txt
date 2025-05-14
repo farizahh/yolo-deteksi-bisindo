@@ -1,4 +1,6 @@
-opencv-python
-ultralytics
 streamlit
+opencv-python-headless
+ultralytics
 Pillow
+numpy
+gTTS
