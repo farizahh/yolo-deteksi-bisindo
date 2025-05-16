@@ -50,7 +50,7 @@ if camera:
 
                 # Jika label berubah, buat audio baru dan putar
                 if label != st.session_state.last_label:
-                    tts = gtts.gTTS(label, lang='id')  # <--- DI SINI BAHASA DISET KE INDONESIA
+                    tts = gtts.gTTS(label)
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as f:
                         tts.save(f.name)
                         st.audio(f.name, format="audio/mp3")
