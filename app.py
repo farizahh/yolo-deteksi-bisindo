@@ -11,8 +11,8 @@ model = YOLO("bisindo_yolov8.pt")
 
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
-# Pilihan metode input gambar
-option = st.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
+# Pilihan input gambar di sidebar
+option = st.sidebar.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
 
 frame = None  # Variabel untuk menyimpan frame gambar
 
@@ -32,7 +32,7 @@ if frame is not None:
     # Prediksi menggunakan YOLOv8
     results = model.predict(frame)
 
-    # Variabel untuk menampilkan label terakhir (state agar suara tidak terus menerus)
+    # Variabel untuk menyimpan label terakhir agar suara tidak terus menerus
     if "last_label" not in st.session_state:
         st.session_state.last_label = ""
 
