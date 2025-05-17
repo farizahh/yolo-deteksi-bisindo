@@ -13,7 +13,7 @@ st.title("Penerjemah Bahasa Isyarat BISINDO")
 
 # --- Sidebar ---
 st.sidebar.header("Metode Input")
-option = st.sidebar.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
+option = st.sidebar.button("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
 
 frame = None  # Variabel untuk menyimpan frame gambar
 
