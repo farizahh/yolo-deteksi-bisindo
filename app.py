@@ -5,56 +5,67 @@ from PIL import Image
 import numpy as np
 import gtts
 import tempfile
-import os
 
-# Load YOLOv8 model
-model = YOLO("bisindo_yolov8.pt")  # Ganti dengan path model yang sesuai
+# Load model YOLOv8 (ganti path sesuai model kamu)
+model = YOLO("bisindo_yolov8.pt")
 
-# Set title
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
-# Kamera Input (langsung menangkap gambar)
-camera = st.camera_input("Arahkan kamera ke gerakan tangan")
+# Pilihan metode input gambar
+option = st.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
 
-# State untuk label terakhir
-if "last_label" not in st.session_state:
-    st.session_state.last_label = ""
+frame = None  # Variabel untuk menyimpan frame gambar
 
-if camera:
-    # Baca frame dari kamera (hasilnya format PIL)
-    image = Image.open(camera)
-    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+if option == "Ambil Foto Kamera":
+    camera = st.camera_input("Arahkan kamera ke gerakan tangan")
+    if camera:
+        image = Image.open(camera)
+        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-    # Deteksi objek menggunakan YOLOv8
+elif option == "Upload Gambar":
+    upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
+    if upload:
+        image = Image.open(upload)
+        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+if frame is not None:
+    # Prediksi menggunakan YOLOv8
     results = model.predict(frame)
 
+    # Variabel untuk menampilkan label terakhir (state agar suara tidak terus menerus)
+    if "last_label" not in st.session_state:
+        st.session_state.last_label = ""
+
+    # Proses hasil deteksi
     for r in results:
         boxes = r.boxes
         names = r.names
 
-        # Jika ada bounding box, tampilkan
-        if boxes is not None:
+        if boxes is not None and len(boxes) > 0:
             for box in boxes:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
 
-                # Gambar bounding box pada gambar
-                x1, y1, x2, y2 = box.xyxy[0]  # Koordinat bounding box
-                frame = cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+                # Ambil koordinat bounding box dalam integer
+                x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
 
-                # Tampilkan label pada gambar
-                frame = cv2.putText(frame, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                # Gambar bounding box dan label pada frame
+                frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                frame = cv2.putText(frame, label, (x1, y1 - 10),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-                # Tampilkan hasil terjemahan dalam streamlit
+                # Tampilkan hasil terjemahan teks
                 st.markdown(f"### Terjemahan: {label}")
 
-                # Jika label berubah, buat audio baru dan putar
+                # Putar suara hanya jika label berbeda dari sebelumnya
                 if label != st.session_state.last_label:
-                    tts = gtts.gTTS(label)
+                    tts = gtts.gTTS(label, lang='id')  # 'id' untuk bahasa Indonesia
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as f:
                         tts.save(f.name)
                         st.audio(f.name, format="audio/mp3")
                     st.session_state.last_label = label
 
-    # Tampilkan frame dengan bounding box yang sudah digambar
+    # Tampilkan gambar dengan bounding box
     st.image(frame, channels="BGR")
+else:
+    st.info("Silakan pilih metode input dan berikan gambar tangan untuk diterjemahkan.")
