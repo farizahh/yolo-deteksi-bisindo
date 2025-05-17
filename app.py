@@ -6,37 +6,31 @@ import numpy as np
 import gtts
 import tempfile
 
-# Load model YOLOv8 (ganti path sesuai model kamu)
 model = YOLO("bisindo_yolov8.pt")
 
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
-# Pilihan input gambar di sidebar
-option = st.sidebar.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
+# Kamera input di sidebar
+camera = st.sidebar.camera_input("Ambil foto dengan kamera")
 
-frame = None  # Variabel untuk menyimpan frame gambar
+# Upload gambar di sidebar
+upload = st.sidebar.file_uploader("Atau upload gambar", type=["jpg", "jpeg", "png"])
 
-if option == "Ambil Foto Kamera":
-    camera = st.camera_input("Arahkan kamera ke gerakan tangan")
-    if camera:
-        image = Image.open(camera)
-        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+frame = None
 
-elif option == "Upload Gambar":
-    upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
-    if upload:
-        image = Image.open(upload)
-        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+if camera:
+    image = Image.open(camera)
+    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+elif upload:
+    image = Image.open(upload)
+    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 if frame is not None:
-    # Prediksi menggunakan YOLOv8
     results = model.predict(frame)
 
-    # Variabel untuk menyimpan label terakhir agar suara tidak terus menerus
     if "last_label" not in st.session_state:
         st.session_state.last_label = ""
 
-    # Proses hasil deteksi
     for r in results:
         boxes = r.boxes
         names = r.names
@@ -46,26 +40,21 @@ if frame is not None:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
 
-                # Ambil koordinat bounding box dalam integer
                 x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
 
-                # Gambar bounding box dan label pada frame
                 frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
                 frame = cv2.putText(frame, label, (x1, y1 - 10),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-                # Tampilkan hasil terjemahan teks
                 st.markdown(f"### Terjemahan: {label}")
 
-                # Putar suara hanya jika label berbeda dari sebelumnya
                 if label != st.session_state.last_label:
-                    tts = gtts.gTTS(label, lang='id')  # 'id' untuk bahasa Indonesia
+                    tts = gtts.gTTS(label, lang='id')
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as f:
                         tts.save(f.name)
                         st.audio(f.name, format="audio/mp3")
                     st.session_state.last_label = label
 
-    # Tampilkan gambar dengan bounding box
     st.image(frame, channels="BGR")
 else:
-    st.info("Silakan pilih metode input dan berikan gambar tangan untuk diterjemahkan.")
+    st.info("Silakan ambil foto dengan kamera atau upload gambar untuk diterjemahkan.")
