@@ -11,8 +11,9 @@ model = YOLO("bisindo_yolov8.pt")
 
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
-# Pilihan metode input gambar
-option = st.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
+# --- Sidebar ---
+st.sidebar.header("Metode Input")
+option = st.sidebar.radio("Pilih metode input gambar:", ("Ambil Foto Kamera", "Upload Gambar"))
 
 frame = None  # Variabel untuk menyimpan frame gambar
 
