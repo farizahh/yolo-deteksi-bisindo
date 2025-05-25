@@ -25,9 +25,14 @@ if option == "Ambil Foto Kamera":
 
 elif option == "Upload Gambar":
     upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
-    if upload:
+# Cek ukuran file maksimum 5 MB (5 * 1024 * 1024 bytes)
+if upload is not None:
+    if upload.size > 5 * 1024 * 1024:
+        st.warning("Ukuran file terlalu besar. Maksimal 5MB.")
+    else:
         image = Image.open(upload)
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
 
 if frame is not None:
     # Prediksi menggunakan YOLOv8
@@ -46,16 +51,19 @@ if frame is not None:
             for box in boxes:
                 cls_id = int(box.cls[0])
                 label = names[cls_id]
+                conf = float(box.conf[0])  # Tambahkan confidence score
+
+                label_with_conf = f"{label} {conf:.2f}"
 
                 # Ambil koordinat bounding box dalam integer
                 x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
 
-                # Gambar bounding box dan label pada frame
+                # Gambar bounding box dan label + confidence pada frame
                 frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                frame = cv2.putText(frame, label, (x1, y1 - 10),
+                frame = cv2.putText(frame, label_with_conf, (x1, y1 - 10),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-                # Tampilkan hasil terjemahan teks
+                # Tampilkan hasil terjemahan teks (hanya label-nya)
                 st.markdown(f"### Terjemahan: {label}")
 
                 # Putar suara hanya jika label berbeda dari sebelumnya
