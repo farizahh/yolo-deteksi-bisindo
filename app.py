@@ -24,7 +24,6 @@ if option == "Ambil Foto Kamera":
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 elif option == "Upload Gambar":
-   st.write("Ukuran file maksimal: 5MB")
    upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
 # Cek ukuran file maksimum 5 MB (5 * 1024 * 1024 bytes)
 if upload is not None:
