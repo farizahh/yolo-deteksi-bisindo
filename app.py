@@ -24,11 +24,15 @@ if option == "Ambil Foto Kamera":
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 elif option == "Upload Gambar":
-   upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
+    upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
     if upload:
         image = Image.open(upload)
         frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-
+elif option == "Upload Gambar":
+    upload = st.file_uploader("Upload gambar tangan", type=["jpg", "jpeg", "png"])
+    if upload:
+        image = Image.open(upload)
+        frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 if frame is not None:
     # Prediksi menggunakan YOLOv8
