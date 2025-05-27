@@ -7,7 +7,7 @@ import gtts
 import tempfile
 
 # Load model YOLOv8 (ganti path sesuai model kamu)
-model = YOLO("bisindo_yolov8.pt")
+model = YOLO("baru_bisindo_yolov8.pt")
 
 st.title("Penerjemah Bahasa Isyarat BISINDO")
 
